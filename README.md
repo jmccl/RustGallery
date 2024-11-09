@@ -104,7 +104,7 @@ The _root_ directive must also precede the _rust_gallery_ directive.
 ## Motivation
 
 For decades I have self-hosted vacation photos with [PyGallery](https://pygallery.sourceforge.net/), unsupported since 2003. 
-At long last I have concluded that continueing this is somewhat silly. I wrote my own code
+At long last I have concluded that continuing this is somewhat silly. I wrote my own code
 rather than using one of the many (likely better) alternatives because:
 
 * I wanted a project to try out Rust.
