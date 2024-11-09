@@ -19,7 +19,7 @@ to be the one that's best for you. Some of the issues are:
 * It is based on the _[ngx-rust](https://github.com/nginxinc/ngx-rust)_ crate. Its
 README currently starts with: "This project is still a work in progress and not production ready."
 * Photo resizing on the fly is somewhat slow if the originals are very large, although caching tactics in the browser mitigate this. In addition resizing is not done asynchronously, i.e., it blocks an nginx thread.
-* There is essentially no custimization possible (at present?)
+* There is essentially no customization possible (at present?)
 * At least minor fixes will likely be needed if not hosting on Linux.
 * As this is my my first Rust code, it's likely not idiomatic. As this is my first nginx module, it's likely not idiomatic.
 
