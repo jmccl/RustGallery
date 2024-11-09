@@ -60,8 +60,10 @@ Alternatively - and possibly more conveniently when migrating from another galle
 captions may be placed in a text file named _captions.txt_, one entry 
 per line with the source file name followed by the caption. For example:
 
-> foo.jpg This is the caption
-> bar.jpg This is another caption
+```
+foo.jpg This is the caption
+bar.jpg This is another caption
+```
 
 The file must be in the gallery directory when _make-gallery_ is run.
 
