@@ -1,0 +1,7 @@
+# Can't get it from crates.io since it's broken there
+git clone https://github.com/nginxinc/ngx-rust.git
+# Switch to a known good commit
+cd ngx-rust && git checkout ab23c13c7baa41aa6774802aac098847aedfdd8b && cd -
+
+NGX_VERSION=`nginx -v 2>&1 >/dev/null | cut -d '/' -f 2`
+NGX_VERSION=$NGX_VERSION cargo build --release

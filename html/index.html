@@ -1,0 +1,327 @@
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <!-- Disable favicon request -->
+    <link rel="icon" href="data:,">
+    <style>
+        /* CSS reset */
+        html {
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        *,
+        *:before,
+        *:after {
+            box-sizing: inherit;
+        }
+
+        body,
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6,
+        p,
+        ol,
+        ul {
+            margin: 0;
+            padding: 0;
+            font-weight: normal;
+        }
+
+        ol,
+        ul {
+            list-style: none;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        body {
+            overflow: hidden;
+        }
+
+        .center {
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .thumbnails {
+            float: left;
+            overflow-y: auto;
+            position: relative;
+            max-height: 100%;
+            height: 100%;
+        }
+
+        .clickable {
+            cursor: pointer;
+            font-weight: bolder;
+            font-size: 1.5rem;
+        }
+
+        .header-container {
+            background-color: lightgray;
+            overflow: auto;
+        }
+
+        .header {
+            font-size: 1.2em;
+            font-family: sans-serif;
+
+            width: 100%;
+            display: flex;
+            flex-wrap: nowrap;
+            align-items: center;
+            justify-content: space-between;
+            padding: .1em .3em 0 .1em;
+        }
+
+        .left-header {
+            min-width: 0;
+            text-overflow: "-";
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .right-header {
+            flex-shrink: 0;
+        }
+
+        .photo-container {
+            overflow: hidden;
+            width: fit-content;
+            position: relative;
+            text-align: center;
+            font-size: 8em;
+        }
+
+        .photo {
+            display: inline;
+        }
+
+        .play-button {
+            color: red;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: none;
+            margin: auto;
+            width: fit-content;
+            height: fit-content;
+        }
+
+        .edit_caption {
+            display: none;
+            position: static;
+            width: 80%;
+            margin: auto;
+            top: 4em;
+            background-color: white;
+            border: 2px black;
+            padding: .5em;
+        }
+    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" >
+</head>
+<script>
+    const tnHeight = 100;
+    var picCount = 0;
+
+    addEventListener("hashchange", (event) => {
+        handleHashChange();
+    });
+
+    addEventListener("keydown", function (event) {
+        if (document.getElementById("edit_caption").style.display != "none") {
+            return;
+        }
+        if (event.key == 'ArrowLeft') {
+            incrementPic(-1);
+        }
+        if (event.key == 'ArrowRight') {
+            incrementPic(+1);
+        }
+    });
+
+    function handleHashChange() {
+        hideCaptionEdit();
+        let pic = location.hash;
+        if (pic.length == 0) {
+            return;
+        }
+        let picId = pic.substr(1);
+        let index = Number(picId) - 1;
+
+        document.getElementById("pic").setAttribute("src", getPicUrl(picId));
+        document.getElementById("picId").innerHTML = picId;
+
+        let caption = document.getElementById("caption");
+        while (caption.hasChildNodes()) {
+            caption.removeChild(caption.firstChild);
+        }
+        caption.appendChild(document.createTextNode(metadata[index].caption));
+
+        document.getElementById("date").innerHTML = metadata[index].date;
+        document.getElementById("play-button").style.display = metadata[index].video ? "block" : "none";
+        document.getElementById("pic").style.display = "inline";
+        document.getElementById("video").style.display = "none";
+        document.getElementById("video").setAttribute("src", "");
+
+        document.body.style.cursor = 'wait';
+
+        // Scroll the thumbnails
+        let tn = document.getElementById("tn_container");
+        const tnRect = tn.getBoundingClientRect();
+        const minTop = Math.max(0, (index + 1) * tnHeight - tnRect.bottom + tnRect.top);
+
+        if (tn.scrollTop < minTop) {
+            tn.scrollTop = minTop;
+        } else if (index * tnHeight < tn.scrollTop) {
+            tn.scrollTop = index * tnHeight;
+        }
+    }
+
+    function playVideo(event) {
+        let picId = location.hash.substr(1);
+
+        document.getElementById("pic").style.display = "none";
+        document.getElementById("play-button").style.display = "none";
+        let video = document.getElementById("video");
+        video.setAttribute("src", picId + ".mp4");
+        video.style.display = "inline";
+        headerRect = document.getElementById("header").getBoundingClientRect();
+        video.style.maxWidth = (headerRect.right - headerRect.left) + "px";
+        video.style.maxHeight = (window.innerHeight - headerRect.bottom) + "px";
+    }
+
+    function getPicUrl(picId) {
+        const headerRect = document.getElementById("header").getBoundingClientRect();
+        const width = Math.floor(headerRect.right - headerRect.left);
+        const height = Math.floor(window.innerHeight - headerRect.height);
+        return picId + ".jpg?h=" + height + "&w=" + width;
+    }
+
+    function getPicId(event) {
+        const y = event.clientY - document.getElementById("thumbnails").getBoundingClientRect().top;
+        return Math.floor(y / tnHeight) + 1;
+    }
+
+    function clickThumbnail(e) {
+        location.hash = getPicId(e);
+    }
+
+    function clickImage(e) {
+        const left_offset = document.getElementById("header").getBoundingClientRect().left;
+        if ((event.clientX - left_offset) > (window.innerWidth - left_offset) / 2) {
+            incrementPic(+1);
+        } else {
+            incrementPic(-1);
+        }
+    }
+
+    function updateTooltip(e) {
+        document.getElementById("thumbnails").setAttribute("title", getPicId(e));
+    }
+
+    function getPicOffset(count) {
+        const picNo = location.hash;
+        let newPic = 1;
+        if (picNo.length > 0) {
+            if (picCount == 0) {
+                picCount = Math.round(document.getElementById("thumbnails").getBoundingClientRect().height / tnHeight);
+            }
+            newPic = Number(picNo.substr(1)) + count;
+            if (newPic <= 0) {
+                newPic = picCount;
+            }
+            if (newPic > picCount) {
+                newPic = 1;
+            }
+        }
+        return newPic;
+    }
+
+    function incrementPic(count) {
+        location.hash = getPicOffset(count);
+    }
+
+    function cacheNext() {
+        document.body.style.cursor = 'default';
+        document.getElementById("next_pic").setAttribute("src", getPicUrl(getPicOffset(+1)));
+        document.getElementById("previous_pic").setAttribute("src", getPicUrl(getPicOffset(-1)));
+    }
+
+    function hideCaptionEdit() {
+        document.getElementById("edit_caption").style.display = "none";
+        document.getElementById("input_caption").value = "";
+    }
+
+    function loadThumbnails() {
+        const maxTnRows = 0x10000;
+        const tnPerJpg = maxTnRows / tnHeight;
+        const jpgCount = metadata.length / tnPerJpg + 1;
+
+        let i = 2;
+        while (i <= jpgCount) {
+            let jpg = document.createElement("img");
+            jpg.setAttribute("src", "thumbnails" + (i - 1) + ".jpg");
+            jpg.setAttribute("style", "display: block");
+            jpg.onclick = function (event) { clickThumbnail(event); };
+            jpg.onmousemove = function (event) { updateTooltip(event); };
+            document.getElementById("thumbnails").appendChild(jpg);
+            i++;
+        }
+    }
+
+    window.onload = function () {
+        handleHashChange();
+    }
+</script>
+
+<body>
+    <div class="thumbnails" id="tn_container">
+        <div id="thumbnails">
+            <img src="thumbnails.jpg" onclick="clickThumbnail(event);" onmousemove="updateTooltip(event);" />
+        </div>
+    </div>
+    <div class="header-container">
+        <div id="header" class="header">
+            <span class="left-header">
+                <span id="picId" style="padding-left: .5em"> </span>
+                <span id="caption" style="padding-left: .5em"></span>
+            </span>
+            <span class="right-header">
+                <span id="date" style="padding-left: .5em; padding-right: .5em"></span>
+                <span class="clickable" onclick="incrementPic(-1);">&#x25C4;</span>
+                <span class="clickable" onclick="incrementPic(+1);">&#x25BA;</span>
+            </span>
+        </div>
+    </div>
+    <div class="photo-container center">
+        <img id="pic" class="photo" onclick="clickImage(event);" onload="cacheNext();" />
+        <video id="video" class="photo" controls style="display:none;"></video>
+        <div id="play-button" class="play-button" onclick="playVideo(event);">&#x25B6</div>
+    </div>
+    <img id="previous_pic" style="visibility: hidden;" />
+    <img id="next_pic" style="visibility: hidden;" />
+
+    <div style="width:100%; position: absolute; top: 3em">
+        <div id="edit_caption" class="edit_caption">
+            <label>Caption</label><br>
+            <input id="input_caption" style="width: 100%; font-size: 1.3em; padding: 0.1em">
+        </div>
+    </div>
+    <script src="metadata" onload="loadThumbnails();"></script>
+    <script src="edit_caption.js"></script>
+</body>
+
+</html>

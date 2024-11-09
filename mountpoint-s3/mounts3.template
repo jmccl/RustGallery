@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# Run by systemd (as root) at startup to mount the s3 bucket for RustGallery
+# To restrict access to the 'access key' below, the file owner is root:root
+# and permissions are 700.
+
+export AWS_SECRET_ACCESS_KEY=<access key>
+export AWS_ACCESS_KEY_ID=<access key id>
+
+# mountpoint-s3 can have a large 'prefetch' which can result
+# in OS oom process killing. If that's a problem reduce the prefectch by
+# uncommenting the 'export' below.
+#
+# Max 50MB prefetch size. From this: https://github.com/awslabs/mountpoint-s3/pull/1021
+# export UNSTABLE_MOUNTPOINT_MAX_PREFETCH_WINDOW_SIZE=52428800
+
+sudo -E -u <nginx child process user> mount-s3 --read-only rust-gallery <path to mount>

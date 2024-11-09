@@ -1,0 +1,2 @@
+# Extracts the captions from the PyGallery html when run from the 'g_exhibits' directory
+grep -B 7 "font size=+1>" *full.html | tr '\n' ' ' | sed 's/ -- /\n/g' | perl -e 'while(<>) { $_ =~ /g_pics\/(.*?)\".*?font size=\+1>(.*?)<\/font>/; print $1." ".$2."\n"; }'

@@ -1,0 +1,27 @@
+[package]
+name = "rust_gallery"
+version = "0.0.1"
+edition = "2021"
+
+[lib]
+name = "rust_gallery"
+crate-type = ["cdylib", "lib"]
+
+[[bin]]
+name = "make-gallery"
+
+[dependencies]
+# ngx on crates.io isn't being kept up / doesn't work
+ngx = { path = "ngx-rust" }
+
+anyhow = "1.0.82"
+chrono = { version = "0.4.33", features = ["serde"] }
+clap = { version = "4.5.4", features = ["derive"] }
+http = "1.1.0"
+image = { version = "0.24.9", features = ["jpeg"] }
+libc = "0.2.152"
+once_cell = "1.19.0"
+serde = { version = "1.0.197", features = ["derive"] }
+serde_json = "1.0.114"
+urlencoding = "2.1.3"
+uuid = { version = "1.10.0", features = ["v4"] }
