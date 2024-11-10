@@ -35,7 +35,7 @@ for that user. I then created a _Bucket Policy_ for the S3 bucket as follows.
             ],
             "Resource": [
                 "arn:aws:s3:::<bucket name>/*",
-                "arn:aws:s3:::<bucket nameq>"
+                "arn:aws:s3:::<bucket name>"
             ]
         }
     ]
