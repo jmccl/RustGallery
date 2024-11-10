@@ -53,7 +53,7 @@ directory, which is awkward because the child process user has no password or
 home directory, so normal methods of impersonation don't work. However, this will do it:
 
 ```
-    sudo -u http <nginx child process user> bash
+    sudo -u <nginx child process user> bash
 ```
 
 # Getting Galleries to S3
