@@ -14,4 +14,4 @@ export AWS_ACCESS_KEY_ID=<access key id>
 # Max 50MB prefetch size. From this: https://github.com/awslabs/mountpoint-s3/pull/1021
 # export UNSTABLE_MOUNTPOINT_MAX_PREFETCH_WINDOW_SIZE=52428800
 
-sudo -E -u <nginx child process user> mount-s3 --read-only rust-gallery <path to mount>
+sudo -E -u <nginx child process user> mount-s3 --read-only <bucket name> <path to mount>
