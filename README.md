@@ -21,7 +21,7 @@ README currently starts with: "This project is still a work in progress and not 
 * Photo resizing on the fly is somewhat slow if the originals are very large, although caching tactics in the browser mitigate this. In addition resizing is not done asynchronously, i.e., it blocks an nginx thread.
 * There is essentially no customization possible (at present?)
 * At least minor fixes will likely be needed if not hosting on Linux.
-* As this is my my first Rust code, it's likely not idiomatic. As this is my first nginx module, it's likely not idiomatic.
+* As this is my first Rust code, it's likely not idiomatic. As this is my first nginx module, it's likely not idiomatic.
 
 You can view an example gallery [here](https://squotd.net/RustGalleryDemo/). (Note that [photo 36](https://squotd.net/RustGalleryDemo/#36) demonstrates how videos are displayed.)
 
