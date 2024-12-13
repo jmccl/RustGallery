@@ -54,7 +54,7 @@ are only required for gallery preparation.
 
 If nginx is serving from localhost (127.0.0.1) captions may be edited by double-clicking
 on the picture id in the upper left of the web page. (Note that the generated _metadata_ file must
-be writable by the nginx child processes user, which varies by OS.)
+be writable by the nginx child-process user, which varies by OS.)
 
 Alternatively - and possibly more conveniently when migrating from another gallery -
 captions may be placed in a text file named _captions.txt_, one entry 
