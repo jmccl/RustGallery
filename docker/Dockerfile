@@ -1,4 +1,4 @@
-FROM rust:1.77-slim
+FROM rust:1.83-slim-bullseye
 
 ADD ./setup.sh .
 
