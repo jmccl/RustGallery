@@ -1,4 +1,4 @@
-FROM rust:1.83-slim-bullseye
+FROM rust:1.83-slim-bookworm
 
 ADD ./setup.sh .
 
