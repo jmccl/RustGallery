@@ -226,7 +226,8 @@ fn parse_query_string(query: &str) -> HashMap<String, String> {
 struct Metadata<'a> {
     pub date: String,
     pub caption: &'a String,
-    pub video: bool
+    pub video: bool,
+    pub location: &'a Option<String>
 }
 
 // Metadata used by the web-page
@@ -238,7 +239,8 @@ fn return_metadata(request: &mut http::Request, gallery_path: &String) -> core::
         metadata.push(Metadata { 
             date: img.time.format("%m/%d/%Y").to_string(), 
             caption: &img.caption, 
-            video: img.is_mp4()
+            video: img.is_mp4(),
+            location: &img.location
         });
     }
 

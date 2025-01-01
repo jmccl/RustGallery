@@ -35,7 +35,8 @@ pub struct Image {
     pub time: NaiveDateTime,
     pub width: u16,
     pub height: u16,
-    pub mp4_scaled: bool
+    pub mp4_scaled: bool,
+    pub location: Option<String>
 }
 
 impl Image {

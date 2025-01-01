@@ -9,6 +9,7 @@ for low-volume serving to friends and family and a terrible trade-off for high-v
 serving.
 * It has - somewhat limited - support for videos.
 * It has support for captions for photos and videos.
+* If location data is present in exif tags it can link to the google map photo location.
 * Mobile support is not great, but it exists.
 
 I wrote this mainly to teach myself the Rust programming language. There are

@@ -66,6 +66,7 @@ fn main() {
     save_html();
 }
 
+// Extract value from json metadata line, e.g. '    "path": "foo.jpg"\
 fn extract_value(line: &String) -> String {
     let s = line.splitn(5, '\"').collect::<Vec<_>>().get(3).expect("Metadata not well formed").to_string();
     return s;
@@ -89,7 +90,7 @@ fn load_captions() -> HashMap<String, String> {
             let mut path = String::new();
             let rdr = BufReader::new(md);
             for line in rdr.lines() {
-                let l = line.expect("Well formed metadata line");
+                let l = line.expect("Badly formed metadata line");
                 if l.starts_with("    \"path") {
                     path = extract_value(&l);
                 } else if l.starts_with("    \"caption") {
@@ -179,7 +180,7 @@ fn read_exif(use_fn_date: bool) -> Result<Vec<Image>, String> {
 
     // exiftool seems much more robust and complete than any alternatives, so we spawn
     let cmd = "shopt -s nullglob &&
-                exiftool -m -d '%Y:%m:%d %H:%M:%S' -CreateDate -DateTimeOriginal -FileModifyDate -ImageWidth -ImageHeight *.{jpg,JPG,mp4,MP4,mov,MOV,avi,AVI}";
+                exiftool -m -d '%Y:%m:%d %H:%M:%S' -CreateDate -DateTimeOriginal -FileModifyDate -ImageWidth -ImageHeight -GPSLatitude -GPSLongitude *.{jpg,JPG,mp4,MP4,mov,MOV,avi,AVI}";
     
     // Run it through bash to get path expansion rather than running exif directly
     let output = match run(cmd) {
@@ -190,6 +191,7 @@ fn read_exif(use_fn_date: bool) -> Result<Vec<Image>, String> {
     let mut images = Vec::<Image>::new();
     let path_delimiter = "======== ";
     let mut wait_for_next = false;
+    let mut latitude = String::new();
 
     for line in String::from_utf8(output.stdout).unwrap().lines() {
         if line.starts_with(path_delimiter) {
@@ -209,7 +211,8 @@ fn read_exif(use_fn_date: bool) -> Result<Vec<Image>, String> {
                                 time: get_empty_date(), 
                                 height: 0, 
                                 width: 0,
-                                mp4_scaled: false });
+                                mp4_scaled: false,
+                                location: None });
             continue;
         }
         if wait_for_next {
@@ -253,6 +256,15 @@ fn read_exif(use_fn_date: bool) -> Result<Vec<Image>, String> {
             images[index].height = u16::from_str(&line[line.rfind(": ").unwrap() + 2 ..]).unwrap();
             continue;
         }
+        if line.starts_with("GPS Latitude") {
+            latitude = line[line.rfind(": ").unwrap() + 2 ..].to_string();
+            continue;
+        }
+        if line.starts_with("GPS Longitude") {
+            images[index].location = Some(format!("{}, {}", latitude,
+                                                            line[line.rfind(": ").unwrap() + 2 ..].to_string()));
+            continue;
+        }
     }
 
     Ok(images)
@@ -290,7 +302,7 @@ fn needs_scaling(image: &Image) -> bool {
         return true;
     }
 
-    image.width > 1920  // we scale to ~ 1920x1080 which is somewhat arbitrary
+    image.width > 1920  // we scale to ~ 1920x1080, which is somewhat arbitrary
 }
 
 fn save_html() {
