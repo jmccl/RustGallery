@@ -160,6 +160,7 @@
         }
         let picId = pic.substr(1);
         let index = Number(picId) - 1;
+        updateLocation(index);
 
         document.getElementById("pic").setAttribute("src", getPicUrl(picId));
         document.getElementById("picId").innerHTML = picId;
@@ -232,6 +233,25 @@
         document.getElementById("thumbnails").setAttribute("title", getPicId(e));
     }
 
+    function getGoogleLocationUrl(location) {
+        location = location.replaceAll(" deg ", "°");
+        location = location.replaceAll(" ", "");
+        location = location.replace(",", "+");
+
+        return "https://www.google.com/maps/place/" + location;
+    }
+
+    function updateLocation(index) {
+        var locationLink = document.getElementById("location");
+        const location = metadata[index].location;
+        if (location) {
+            locationLink.style.display = "inline";
+            locationLink.setAttribute("href", getGoogleLocationUrl(location));
+        } else {
+            locationLink.style.display = "none";
+        }
+    }
+
     function getPicOffset(count) {
         const picNo = location.hash;
         let newPic = 1;
@@ -300,6 +320,7 @@
                 <span id="caption" style="padding-left: .5em"></span>
             </span>
             <span class="right-header">
+                <a id="location" style="padding-left: .5em" target="_blank" rel="noopener noreferrer">&#x23DA</a>
                 <span id="date" style="padding-left: .5em; padding-right: .5em"></span>
                 <span class="clickable" onclick="incrementPic(-1);">&#x25C4;</span>
                 <span class="clickable" onclick="incrementPic(+1);">&#x25BA;</span>
