@@ -81,6 +81,7 @@
             align-items: center;
             justify-content: space-between;
             padding: .1em .3em 0 .1em;
+            overflow: hidden;
         }
 
         .left-header {
@@ -303,6 +304,11 @@
     }
 
     window.onload = function () {
+        // Handle funky font heights of &#x23DA
+        let header = document.getElementById("header");
+        console.log("height is " + header.offsetHeight + header);
+        header.style.maxHeight = header.offsetHeight;     
+
         handleHashChange();
     }
 </script>
@@ -320,7 +326,7 @@
                 <span id="caption" style="padding-left: .5em"></span>
             </span>
             <span class="right-header">
-                <a id="location" style="padding-left: .5em" target="_blank" rel="noopener noreferrer">&#x23DA</a>
+                <a id="location" style="padding-left: .5em; display: none" target="_blank" rel="noopener noreferrer">&#x23DA</a>
                 <span id="date" style="padding-left: .5em; padding-right: .5em"></span>
                 <span class="clickable" onclick="incrementPic(-1);">&#x25C4;</span>
                 <span class="clickable" onclick="incrementPic(+1);">&#x25BA;</span>
