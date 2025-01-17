@@ -180,7 +180,7 @@ fn read_exif(use_fn_date: bool) -> Result<Vec<Image>, String> {
 
     // exiftool seems much more robust and complete than any alternatives, so we spawn
     let cmd = "shopt -s nullglob &&
-                exiftool -m -d '%Y:%m:%d %H:%M:%S' -CreateDate -DateTimeOriginal -FileModifyDate -ImageWidth -ImageHeight -GPSLatitude -GPSLongitude *.{jpg,JPG,mp4,MP4,mov,MOV,avi,AVI}";
+                exiftool -m -d '%Y:%m:%d %H:%M:%S' -CreateDate -DateTimeOriginal -FileModifyDate -ImageWidth -ImageHeight -GPSPosition *.{jpg,JPG,mp4,MP4,mov,MOV,avi,AVI}";
     
     // Run it through bash to get path expansion rather than running exif directly
     let output = match run(cmd) {
@@ -191,7 +191,6 @@ fn read_exif(use_fn_date: bool) -> Result<Vec<Image>, String> {
     let mut images = Vec::<Image>::new();
     let path_delimiter = "======== ";
     let mut wait_for_next = false;
-    let mut latitude = String::new();
 
     for line in String::from_utf8(output.stdout).unwrap().lines() {
         if line.starts_with(path_delimiter) {
@@ -256,13 +255,8 @@ fn read_exif(use_fn_date: bool) -> Result<Vec<Image>, String> {
             images[index].height = u16::from_str(&line[line.rfind(": ").unwrap() + 2 ..]).unwrap();
             continue;
         }
-        if line.starts_with("GPS Latitude") {
-            latitude = line[line.rfind(": ").unwrap() + 2 ..].to_string();
-            continue;
-        }
-        if line.starts_with("GPS Longitude") {
-            images[index].location = Some(format!("{}, {}", latitude,
-                                                            line[line.rfind(": ").unwrap() + 2 ..].to_string()));
+        if line.starts_with("GPS Position") {
+            images[index].location = Some(line[line.rfind(": ").unwrap() + 2 ..].to_string());
             continue;
         }
     }
