@@ -6,7 +6,7 @@ use ngx::ffi::{
 };
 use ngx::http::{ HTTPModule, MergeConfigError, Method, HTTPStatus, ngx_http_conf_get_module_loc_conf };
 use ngx::{ core, core::Buffer, core::Status, http };
-use ngx::{ http_request_handler, ngx_log_debug_http, ngx_modules, ngx_null_command, ngx_string };
+use ngx::{ http_request_handler, ngx_log_debug_http, ngx_modules, ngx_null_command, ngx_string, };
 
 use std::os::raw::{ c_char, c_void };
 
@@ -562,8 +562,15 @@ http_request_handler!(rust_gallery_access_handler, |request: &mut http::Request|
 
     if IMAGES.read().unwrap().get(&gallery_path).is_none() {
         let r = get_metadata_file(&gallery_path);
+        let md = match load_metadata(r.as_path()) {
+            Ok(m) => m,
+            Err(_) => {
+                // Should really send the 404 page configured for the nginx location
+                return return_value_with_status(request, "404 Not found", "text/html", HTTPStatus::NOT_FOUND);
+            }
+        };
         let mut map = IMAGES.write().unwrap();
-        (*map).insert(gallery_path.clone(), load_metadata(r.as_path()).expect("metadata doesn't exist"));
+        (*map).insert(gallery_path.clone(), md);
     }
 
     ngx_log_debug_http!(request, "Rust Gallery handling: {}", file_name);
