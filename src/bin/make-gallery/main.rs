@@ -7,6 +7,7 @@ use std::fs::File;
 use std::io::{ prelude::*, BufReader };
 
 use std::include_str;
+use std::path::PathBuf;
 use std::process::{ Command, exit, Output };
 use std::str::FromStr;
 use std::vec::Vec;
@@ -25,6 +26,7 @@ use rust_gallery::make_preview;
 fn main() {
     let mut date_srt = false;
     let mut num_srt = false;
+    let mut metadata_only = false;
 
     let args: Vec<String> = env::args().collect();
     for arg in args {
@@ -32,6 +34,7 @@ fn main() {
             println!("Run from the directory with the media.");
             println!("\tTo sort by filename in date-time format rather than exif use '-d'");
             println!("\tTo sort by filename in numerical format rather than exif use '-n'");
+            println!("\tTo write the metadata file to the temporary directory and do no other processing use '-m'");
             return;
         }
         if arg == "-d" {
@@ -39,6 +42,9 @@ fn main() {
         }
         if arg == "-n" {
             num_srt = true;
+        }
+        if arg == "-m" {
+            metadata_only = true;
         }
     }
 
@@ -56,12 +62,23 @@ fn main() {
         images.sort_by_key(|i| i.time);
     }
 
+    // save metadata
+    let mut path = if metadata_only {
+        std::env::temp_dir()
+    } else {
+        PathBuf::new()
+    };
+    path.push(MD_FILE);
+    let _ = fs::write(path, serde_json::to_string_pretty(&images).unwrap());
+
+    if metadata_only {
+        return;
+    }
+
     make_preview(&images);
     
     downscale_videos(&mut images);
 
-    // save metadata
-    let _ = fs::write(MD_FILE, serde_json::to_string_pretty(&images).unwrap());
 
     save_html();
 }
