@@ -109,7 +109,7 @@ At long last I have concluded that continuing this is somewhat silly. I wrote my
 rather than using one of the many (likely better) alternatives because:
 
 * I wanted a project to try out Rust.
-* I had been a part of discussions as to whether to use nginx in an enterprise setting
+* I had been a part of discussions as to whether to use nginx in on the edge
  in the past and wanted to write an nginx module to see how it worked.
 * I wanted to minimize storage costs while still keeping the full size original photos.
 * I wanted to host the photos on S3. Although this did not end up being 
