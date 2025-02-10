@@ -46,7 +46,7 @@ in one directory. The executable _make-gallery_ should be run from the directory
 with the files. This will write a number of files into the gallery to allow it
 to be served.
 
-Directory preparation requires _exiftool_ to be installed. If there are any videos
+Gallery preparation requires _exiftool_ to be installed. If there are any videos
 then _ffmpeg_ needs to be installed. Note that neither of these need to be 
 installed on the server running nginx that will serve the gallery. These 
 are only required for gallery preparation.
