@@ -1,12 +1,12 @@
 use ngx::ffi::{
     nginx_version, ngx_array_push, ngx_chain_t, ngx_command_t, ngx_conf_log_error, ngx_conf_t, ngx_buf_t, ngx_http_core_module,
     ngx_http_handler_pt, ngx_http_module_t, ngx_http_phases_NGX_HTTP_CONTENT_PHASE,
-    ngx_http_request_t, ngx_int_t, ngx_module_t, ngx_uint_t, NGX_CONF_NOARGS,
-    NGX_HTTP_LOC_CONF, NGX_HTTP_MODULE, NGX_LOG_ERR, NGX_RS_HTTP_LOC_CONF_OFFSET, NGX_RS_MODULE_SIGNATURE
+    ngx_int_t, ngx_module_t, ngx_uint_t, NGX_CONF_NOARGS,
+    NGX_HTTP_LOC_CONF, NGX_HTTP_MODULE, NGX_LOG_ERR, NGX_HTTP_LOC_CONF_OFFSET, NGX_RS_MODULE_SIGNATURE
 };
 use ngx::http::{ HTTPModule, MergeConfigError, Method, HTTPStatus, ngx_http_conf_get_module_loc_conf };
-use ngx::{ core, core::Buffer, core::Status, http };
-use ngx::{ http_request_handler, ngx_log_debug_http, ngx_modules, ngx_null_command, ngx_string, };
+use ngx::{ core, core::Buffer, http };
+use ngx::{ http_request_handler, ngx_log_debug_http, ngx_modules, ngx_string, };
 
 use std::os::raw::{ c_char, c_void };
 
@@ -165,11 +165,11 @@ static mut ngx_http_rust_gallery_commands: [ngx_command_t; 2] = [
         name: ngx_string!("rust_gallery"),
         type_: (NGX_HTTP_LOC_CONF | NGX_CONF_NOARGS) as ngx_uint_t,
         set: Some(ngx_http_rust_gallery_commands_set_method),
-        conf: NGX_RS_HTTP_LOC_CONF_OFFSET,
+        conf: NGX_HTTP_LOC_CONF_OFFSET,
         offset: 0,
         post: std::ptr::null_mut(),
     },
-    ngx_null_command!(),
+    ngx_command_t::empty(),
 ];
 
 #[no_mangle]
@@ -352,20 +352,20 @@ fn get_content_type(file_name: &str) -> &str {
 }
 
 // Get CSRF crumb for caption edit
-fn get_crumb(request: &http::Request) -> String {
+fn get_crumb(request: &http::Request) -> &str {
     let mut i = request.headers_in_iterator();
     loop {
         match i.next() {
             Some(h) => {
                 if h.0 == "Cookie" {
                     if h.1.starts_with("crumb=") {
-                        let crumb = h.1.clone().split_off("crumb=".len());
+                        let (_, crumb) = h.1.split_at("crumb=".len());
                         return crumb;
                     }
                 }
             },
             None => {
-                return String::new();
+                return "";
             }
         }
     }
