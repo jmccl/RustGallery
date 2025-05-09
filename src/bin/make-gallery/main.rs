@@ -26,6 +26,7 @@ use rust_gallery::make_preview;
 fn main() {
     let mut date_srt = false;
     let mut num_srt = false;
+    let mut no_srt = false;
     let mut metadata_only = false;
 
     let args: Vec<String> = env::args().collect();
@@ -34,6 +35,7 @@ fn main() {
             println!("Run from the directory with the media.");
             println!("\tTo sort by filename in date-time format rather than exif use '-d'");
             println!("\tTo sort by filename in numerical format rather than exif use '-n'");
+            println!("\tTo sort by modified times of the files rather than exif use '-x'");
             println!("\tTo write the metadata file to the temporary directory and do no other processing use '-m'");
             return;
         }
@@ -42,6 +44,9 @@ fn main() {
         }
         if arg == "-n" {
             num_srt = true;
+        }
+        if arg == "-x" {
+            no_srt = true;
         }
         if arg == "-m" {
             metadata_only = true;
@@ -56,10 +61,12 @@ fn main() {
         }
     };
 
-    if num_srt {
-        images.sort_by_key(|i| get_digits(&i.path).parse::<u32>().unwrap());
-    } else {
-        images.sort_by_key(|i| i.time);
+    if !no_srt {
+        if num_srt {
+            images.sort_by_key(|i| get_digits(&i.path).parse::<u32>().unwrap());
+        } else {
+            images.sort_by_key(|i| i.time);
+        }
     }
 
     // save metadata
