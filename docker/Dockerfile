@@ -1,4 +1,4 @@
-FROM rust:1.83-slim-bookworm
+FROM rust:1-slim-trixie
 
 ADD ./setup.sh /setup.sh
 
