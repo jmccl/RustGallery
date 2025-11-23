@@ -1,10 +1,13 @@
 use ngx::ffi::{
-    nginx_version, ngx_array_push, ngx_chain_t, ngx_command_t, ngx_conf_log_error, ngx_conf_t, ngx_buf_t, ngx_http_core_module,
-    ngx_http_handler_pt, ngx_http_module_t, ngx_http_phases_NGX_HTTP_CONTENT_PHASE,
-    ngx_int_t, ngx_module_t, ngx_uint_t, NGX_CONF_NOARGS,
-    NGX_HTTP_LOC_CONF, NGX_HTTP_MODULE, NGX_LOG_ERR, NGX_HTTP_LOC_CONF_OFFSET, NGX_RS_MODULE_SIGNATURE
+    ngx_array_push, ngx_buf_t, ngx_chain_t, ngx_command_t, ngx_conf_log_error, ngx_conf_t,
+    ngx_http_handler_pt, ngx_http_module_t, ngx_http_phases_NGX_HTTP_CONTENT_PHASE, ngx_int_t,
+    ngx_module_t, ngx_uint_t, NGX_CONF_NOARGS, NGX_HTTP_LOC_CONF, NGX_HTTP_LOC_CONF_OFFSET,
+    NGX_HTTP_MODULE, NGX_LOG_ERR,
 };
-use ngx::http::{ HTTPModule, MergeConfigError, Method, HTTPStatus, ngx_http_conf_get_module_loc_conf };
+use ngx::http::{
+    HttpModule, HttpModuleLocationConf, HttpModuleMainConf, 
+    MergeConfigError, Method, NgxHttpCoreModule, HTTPStatus,
+};
 use ngx::{ core, core::Buffer, http };
 use ngx::{ http_request_handler, ngx_log_debug_http, ngx_modules, ngx_string, };
 
@@ -57,16 +60,18 @@ static IMAGES: Lazy<RwLock<HashMap<String, Vec<Image>>>> = Lazy::new(|| RwLock::
 
 // Most of the boilerplate nginx code uses https://github.com/f5yacobucci/ngx-rust-howto as an example.
 
-impl http::HTTPModule for Module {
-    type MainConf = ();
-    type SrvConf = ();
-    type LocConf = ModuleConfig;
+impl http::HttpModule for Module {
+    fn module() -> &'static ngx_module_t {
+        unsafe { &*addr_of!(ngx_http_rust_gallery_module) }
+    }
 
     unsafe extern "C" fn postconfiguration(cf: *mut ngx_conf_t) -> ngx_int_t {
-        let htcf = http::ngx_http_conf_get_module_main_conf(cf, &*addr_of!(ngx_http_core_module));
+        // SAFETY: NGINX only calls postconfiguration with non-null cf
+        let cf = &mut *cf;
+        let cmcf = NgxHttpCoreModule::main_conf_mut(cf).expect("http core main conf");
 
         let h = ngx_array_push(
-            &mut (*htcf).phases[ngx_http_phases_NGX_HTTP_CONTENT_PHASE as usize].handlers,
+            &mut cmcf.phases[ngx_http_phases_NGX_HTTP_CONTENT_PHASE as usize].handlers,
         ) as *mut ngx_http_handler_pt;
         if h.is_null() {
             return core::Status::NGX_ERROR.into();
@@ -76,6 +81,18 @@ impl http::HTTPModule for Module {
         *h = Some(rust_gallery_access_handler);
         core::Status::NGX_OK.into()
     }
+}
+
+unsafe impl http::HttpModuleMainConf for Module {
+    type MainConf = ();
+}
+
+unsafe impl http::HttpModuleServerConf for Module {
+    type ServerConf = ();
+}
+
+unsafe impl http::HttpModuleLocationConf for Module {
+    type LocationConf = ModuleConfig;
 }
 
 // Create a ModuleConfig to save our configuration state.
@@ -128,34 +145,10 @@ ngx_modules!(ngx_http_rust_gallery_module);
 
 #[no_mangle]
 pub static mut ngx_http_rust_gallery_module: ngx_module_t = ngx_module_t {
-    ctx_index: ngx_uint_t::max_value(),
-    index: ngx_uint_t::max_value(),
-    name: std::ptr::null_mut(),
-    spare0: 0,
-    spare1: 0,
-    version: nginx_version as ngx_uint_t,
-    signature: NGX_RS_MODULE_SIGNATURE.as_ptr() as *const c_char,
-
-    ctx: &ngx_http_rust_gallery_module_ctx as *const _ as *mut _,
+    ctx: std::ptr::addr_of!(ngx_http_rust_gallery_module_ctx) as *mut _,
     commands: unsafe { &ngx_http_rust_gallery_commands[0] as *const _ as *mut _ },
     type_: NGX_HTTP_MODULE as ngx_uint_t,
-
-    init_master: None,
-    init_module: None,
-    init_process: None,
-    init_thread: None,
-    exit_thread: None,
-    exit_process: None,
-    exit_master: None,
-
-    spare_hook0: 0,
-    spare_hook1: 0,
-    spare_hook2: 0,
-    spare_hook3: 0,
-    spare_hook4: 0,
-    spare_hook5: 0,
-    spare_hook6: 0,
-    spare_hook7: 0,
+    ..ngx_module_t::default()
 };
 
 // Register and allocate our command structures for directive generation and eventual storage.
@@ -179,7 +172,7 @@ extern "C" fn ngx_http_rust_gallery_commands_set_method(
     conf: *mut c_void,
 ) -> *mut c_char {
     unsafe {
-        let lc = ngx_http_conf_get_module_loc_conf(cf, &*addr_of!(ngx_http_core_module));
+        let lc = NgxHttpCoreModule::location_conf(&*cf).expect("http core loc conf");
 
         let conf = &mut *(conf as *mut ModuleConfig);
         conf.enabled = true;
@@ -358,8 +351,8 @@ fn get_crumb(request: &http::Request) -> &str {
         match i.next() {
             Some(h) => {
                 if h.0 == "Cookie" {
-                    if h.1.starts_with("crumb=") {
-                        let (_, crumb) = h.1.split_at("crumb=".len());
+                    if h.1.to_str().unwrap_or("").starts_with("crumb=") {
+                        let (_, crumb) = h.1.to_str().unwrap().split_at("crumb=".len());
                         return crumb;
                     }
                 }
@@ -536,13 +529,9 @@ fn handle_caption(request: &mut http::Request, query_string: Option<&str>, id_st
 // convert the native NGINX request into a Rust Request instance as well as define an extern C
 // function callable from NGINX.
 http_request_handler!(rust_gallery_access_handler, |request: &mut http::Request| {
-    let enabled: bool;
-    let root_path: String;
-    {
-        let co = unsafe { request.get_module_loc_conf::<ModuleConfig>(&*addr_of!(ngx_http_rust_gallery_module)) }.expect("Module config exists");
-        enabled = co.enabled;
-        root_path = co.root.clone();
-    }
+    let co = Module::location_conf(request).expect("Module config exists");
+    let enabled = co.enabled;
+    let root_path = co.root.clone();
 
     if !enabled {
         return core::Status::NGX_DECLINED;

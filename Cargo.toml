@@ -11,8 +11,7 @@ crate-type = ["cdylib", "lib"]
 name = "make-gallery"
 
 [dependencies]
-# ngx on crates.io isn't being kept up / doesn't work
-ngx = { path = "ngx-rust" }
+ngx = { version = "0.5.0", features = ["vendored"] }
 
 anyhow = "1.0.82"
 chrono = { version = "0.4.33", features = ["serde"] }
