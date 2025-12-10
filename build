@@ -1,4 +1,5 @@
 # Does a build against the installed nginx version
 
 NGX_VERSION=`nginx -v 2>&1 >/dev/null | cut -d '/' -f 2`
+echo Building against nginx version $NGX_VERSION
 NGX_VERSION=$NGX_VERSION cargo build --release
