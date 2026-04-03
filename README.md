@@ -34,7 +34,7 @@ Assuming a local rust and nginx install, run this:
 
 Alternativley, there's a docker build for debian. Run this from the _docker_ directory:
 
->$> docker build .
+>$> docker build -t rust-gallery .
 
 ## Gallery Preparation
 
