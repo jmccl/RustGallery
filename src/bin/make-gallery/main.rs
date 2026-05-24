@@ -90,10 +90,16 @@ fn main() {
     save_html();
 }
 
-// Extract value from json metadata line, e.g. '    "path": "foo.jpg"\
-fn extract_value(line: &String) -> String {
-    let s = line.splitn(5, '\"').collect::<Vec<_>>().get(3).expect("Metadata not well formed").to_string();
-    return s;
+// Extract value from a JSON metadata line, e.g. `    "path": "foo.jpg",`
+fn extract_value(line: &str) -> String {
+    let value = line
+        .split_once(':')
+        .expect("Metadata not well formed")
+        .1
+        .trim()
+        .trim_end_matches(',');
+
+    serde_json::from_str(value).expect("Metadata value is not a valid JSON string")
 }
 
 fn load_captions() -> HashMap<String, String> {
